@@ -3,7 +3,12 @@ from typing import Optional
 
 import pandas as pd
 
-from src.decision import DecisionThresholds, classify_decision
+from src.decision import (
+    build_actions,
+    build_thresholds,
+    classify_decision,
+)
+from src.policies import load_policy
 
 
 REQUIRED_COLUMNS = {"player_id", "risk_score", "value_score"}
@@ -11,17 +16,20 @@ REQUIRED_COLUMNS = {"player_id", "risk_score", "value_score"}
 
 class DecisionEngine:
     """
-    MVP decision engine for player-level recommendations.
+    Policy-driven decision engine for player-level recommendations.
 
     Responsibilities:
-    - load input data
-    - validate schema
-    - apply rule-based decision logic
+    - load decision policy
+    - load and validate input data
+    - apply configurable decision logic
     - return/save decisions
     """
 
-    def __init__(self, thresholds: Optional[DecisionThresholds] = None) -> None:
-        self.thresholds = thresholds or DecisionThresholds()
+    def __init__(self, policy_path: Optional[str | Path] = None) -> None:
+        self.policy_path = Path(policy_path) if policy_path else Path("config/policy.json")
+        self.policy = load_policy(self.policy_path)
+        self.thresholds = build_thresholds(self.policy)
+        self.actions = build_actions(self.policy)
 
     def load_data(self, input_path: str | Path) -> pd.DataFrame:
         input_path = Path(input_path)
@@ -64,6 +72,7 @@ class DecisionEngine:
                 risk_score=float(row["risk_score"]),
                 value_score=float(row["value_score"]),
                 thresholds=self.thresholds,
+                actions=self.actions,
             ),
             axis=1,
             result_type="expand",
@@ -76,7 +85,12 @@ class DecisionEngine:
             axis=1,
         )
 
-        decision_order = {"bench": 0, "limit_minutes": 1, "start": 2}
+        decision_order = {
+            self.actions.high_risk_low_value: 0,
+            self.actions.high_risk_high_value: 1,
+            self.actions.low_risk: 2,
+        }
+
         output_df["decision_rank"] = output_df["decision"].map(decision_order)
 
         output_df = (

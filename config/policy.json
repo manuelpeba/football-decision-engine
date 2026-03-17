@@ -1,0 +1,12 @@
+{
+  "policy_name": "default_mvp_policy",
+  "thresholds": {
+    "high_risk": 0.70,
+    "high_value": 0.60
+  },
+  "actions": {
+    "high_risk_low_value": "bench",
+    "high_risk_high_value": "limit_minutes",
+    "low_risk": "start"
+  }
+}

@@ -3,6 +3,7 @@ from typing import Optional
 
 import pandas as pd
 
+from src.constraints import apply_squad_constraints
 from src.decision import (
     build_actions,
     build_thresholds,
@@ -22,6 +23,7 @@ class DecisionEngine:
     - load decision policy
     - load and validate input data
     - apply configurable decision logic
+    - apply squad-level constraints
     - return/save decisions
     """
 
@@ -30,6 +32,7 @@ class DecisionEngine:
         self.policy = load_policy(self.policy_path)
         self.thresholds = build_thresholds(self.policy)
         self.actions = build_actions(self.policy)
+        self.constraints = self.policy["constraints"]
 
     def load_data(self, input_path: str | Path) -> pd.DataFrame:
         input_path = Path(input_path)
@@ -99,6 +102,8 @@ class DecisionEngine:
             .drop(columns=["decision_rank"])
             .reset_index(drop=True)
         )
+
+        output_df = apply_squad_constraints(output_df, self.constraints)
 
         return output_df
 

@@ -9,6 +9,7 @@ from src.decision import (
     build_thresholds,
     classify_decision,
 )
+from src.optimizer import apply_greedy_optimization
 from src.policies import load_policy
 
 
@@ -23,6 +24,7 @@ class DecisionEngine:
     - load decision policy
     - load and validate input data
     - apply configurable decision logic
+    - apply greedy optimization layer
     - apply squad-level constraints
     - return/save decisions
     """
@@ -33,6 +35,7 @@ class DecisionEngine:
         self.thresholds = build_thresholds(self.policy)
         self.actions = build_actions(self.policy)
         self.constraints = self.policy["constraints"]
+        self.optimization = self.policy["optimization"]
 
     def load_data(self, input_path: str | Path) -> pd.DataFrame:
         input_path = Path(input_path)
@@ -88,21 +91,10 @@ class DecisionEngine:
             axis=1,
         )
 
-        decision_order = {
-            self.actions.high_risk_low_value: 0,
-            self.actions.high_risk_high_value: 1,
-            self.actions.low_risk: 2,
-        }
+        # 1. Compute priority score first
+        output_df = apply_greedy_optimization(output_df, self.optimization)
 
-        output_df["decision_rank"] = output_df["decision"].map(decision_order)
-
-        output_df = (
-            output_df
-            .sort_values(by=["decision_rank", "player_id"])
-            .drop(columns=["decision_rank"])
-            .reset_index(drop=True)
-        )
-
+        # 2. Reallocate decisions under constraints using priority_score
         output_df = apply_squad_constraints(output_df, self.constraints)
 
         return output_df

@@ -1,5 +1,5 @@
 {
-  "policy_name": "default_mvp_policy",
+  "policy_name": "default_multi_constraint_policy",
 
   "thresholds": {
     "high_risk": 0.70,
@@ -13,6 +13,12 @@
   },
 
   "constraints": {
-    "max_limit_minutes": 2
+    "max_limit_minutes": 2,
+    "max_bench": 2,
+    "min_start": 4
+  },
+
+  "optimization": {
+    "risk_penalty": 0.50
   }
 }

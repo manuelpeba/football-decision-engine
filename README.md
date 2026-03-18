@@ -38,6 +38,14 @@ CSV with:
 ```bash
 python run.py
 ```
+---
+
+## Versioning
+
+- v0.1 — Rule-based decision engine (MVP)
+- v0.2 — Policy-driven architecture with configurable thresholds
+- v0.3 — Multi-constraint system for squad-level decision consistency
+- v0.4 — (Planned) Optimization layer for decision allocation under constraints
 
 ---
 

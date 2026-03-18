@@ -3,7 +3,7 @@ from typing import Optional
 
 import pandas as pd
 
-from src.constraints import apply_squad_constraints
+from src.optimizer import apply_greedy_optimization, reallocate_decisions
 from src.decision import (
     build_actions,
     build_thresholds,
@@ -94,8 +94,9 @@ class DecisionEngine:
         # 1. Compute priority score first
         output_df = apply_greedy_optimization(output_df, self.optimization)
 
+
         # 2. Reallocate decisions under constraints using priority_score
-        output_df = apply_squad_constraints(output_df, self.constraints)
+        output_df = reallocate_decisions(output_df, self.constraints)
 
         return output_df
 

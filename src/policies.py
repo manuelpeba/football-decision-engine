@@ -9,11 +9,13 @@ REQUIRED_POLICY_KEYS = {
     "actions",
     "constraints",
     "optimization",
+    "milp",
 }
 REQUIRED_THRESHOLD_KEYS = {"high_risk", "high_value"}
 REQUIRED_ACTION_KEYS = {"high_risk_low_value", "high_risk_high_value", "low_risk"}
 REQUIRED_CONSTRAINT_KEYS = {"max_limit_minutes", "max_bench", "min_start"}
 REQUIRED_OPTIMIZATION_KEYS = {"risk_penalty"}
+REQUIRED_MILP_KEYS = {"start_bonus", "limit_minutes_bonus", "bench_bonus"}
 
 
 def load_policy(policy_path: str | Path) -> dict[str, Any]:
@@ -38,6 +40,7 @@ def validate_policy(policy: dict[str, Any]) -> None:
     actions = policy["actions"]
     constraints = policy["constraints"]
     optimization = policy["optimization"]
+    milp = policy["milp"]
 
     missing_thresholds = REQUIRED_THRESHOLD_KEYS - set(thresholds.keys())
     if missing_thresholds:
@@ -76,3 +79,12 @@ def validate_policy(policy: dict[str, Any]) -> None:
         raise TypeError("Optimization parameter 'risk_penalty' must be numeric.")
     if risk_penalty < 0:
         raise ValueError("Optimization parameter 'risk_penalty' must be non-negative.")
+
+    missing_milp = REQUIRED_MILP_KEYS - set(milp.keys())
+    if missing_milp:
+        raise ValueError(f"Missing MILP keys: {sorted(missing_milp)}")
+
+    for key in REQUIRED_MILP_KEYS:
+        value = milp[key]
+        if not isinstance(value, (int, float)):
+            raise TypeError(f"MILP parameter '{key}' must be numeric.")

@@ -1,5 +1,5 @@
 {
-  "policy_name": "default_multi_constraint_policy",
+  "policy_name": "default_milp_policy",
 
   "thresholds": {
     "high_risk": 0.70,
@@ -20,5 +20,11 @@
 
   "optimization": {
     "risk_penalty": 0.50
+  },
+
+  "milp": {
+    "start_bonus": 0.20,
+    "limit_minutes_bonus": 0.05,
+    "bench_bonus": -0.20
   }
 }

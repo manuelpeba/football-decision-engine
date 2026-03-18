@@ -3,13 +3,12 @@ from typing import Optional
 
 import pandas as pd
 
-from src.optimizer import apply_greedy_optimization, reallocate_decisions
 from src.decision import (
     build_actions,
     build_thresholds,
     classify_decision,
 )
-from src.optimizer import apply_greedy_optimization
+from src.optimizer_milp import apply_milp_optimization
 from src.policies import load_policy
 
 
@@ -24,8 +23,7 @@ class DecisionEngine:
     - load decision policy
     - load and validate input data
     - apply configurable decision logic
-    - apply greedy optimization layer
-    - apply squad-level constraints
+    - apply MILP optimization layer
     - return/save decisions
     """
 
@@ -36,6 +34,7 @@ class DecisionEngine:
         self.actions = build_actions(self.policy)
         self.constraints = self.policy["constraints"]
         self.optimization = self.policy["optimization"]
+        self.milp = self.policy["milp"]
 
     def load_data(self, input_path: str | Path) -> pd.DataFrame:
         input_path = Path(input_path)
@@ -91,12 +90,12 @@ class DecisionEngine:
             axis=1,
         )
 
-        # 1. Compute priority score first
-        output_df = apply_greedy_optimization(output_df, self.optimization)
-
-
-        # 2. Reallocate decisions under constraints using priority_score
-        output_df = reallocate_decisions(output_df, self.constraints)
+        output_df = apply_milp_optimization(
+            output_df,
+            constraints=self.constraints,
+            optimization_config=self.optimization,
+            milp_config=self.milp,
+        )
 
         return output_df
 

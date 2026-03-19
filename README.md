@@ -31,6 +31,8 @@ The Football Decision Engine integrates:
 - player value (performance contribution)
 - availability risk (injury / exposure)
 - squad-level constraints
+- tactical structure
+- match context across a planning horizon
 
 to produce **actionable, explainable and optimized decisions**:
 
@@ -40,7 +42,7 @@ to produce **actionable, explainable and optimized decisions**:
 
 These decisions are not made independently.
 
-They are allocated through a **global optimization process (MILP)** that ensures consistency across the entire squad.
+They are allocated through a **global optimization process** that ensures consistency across the entire squad, from player-level actions to formation-constrained lineups and multi-match exposure planning.
 
 ---
 
@@ -53,6 +55,8 @@ They are allocated through a **global optimization process (MILP)** that ensures
 | MILP Optimization | Globally optimal decision allocation |
 | Risk-aware utility | Explicit trade-off between performance and availability |
 | Explainability | Human-readable reasoning for each decision |
+| Lineup Optimization | Formation-constrained starting XI |
+| Multi-Match Planning | Horizon-aware exposure allocation under congestion |
 
 ---
 
@@ -62,7 +66,7 @@ They are allocated through a **global optimization process (MILP)** that ensures
 |------|------|
 | Language | Python |
 | Data | pandas |
-| Optimization | PuLP (MILP) |
+| Optimization | PuLP (MILP), SciPy |
 | Config | JSON |
 | Architecture | Modular / production-style |
 
@@ -71,10 +75,12 @@ They are allocated through a **global optimization process (MILP)** that ensures
 ## 📑 Table of Contents
 
 - 📚 [Documentation](#-documentation)
+- 🎯 [Demo](#-demo)
+- ⚡ [Quick Start](#-quick-start)
 - 🧠 [Project Objective](#-project-objective)
 - ⚽ [Real-world Use Case (Matchday Scenario)](#-real-world-use-case-matchday-scenario)
-- 📊 [Notebooks (Progressive Demonstrations)](#-notebooks-progressive-demostrations)
-- 🔢 [v0.8 — Multi-Match Planning](#-v08-multi--match-planning)
+- 📊 [Notebooks (Progressive Demonstrations)](#-notebooks-progressive-demonstrations)
+- 🔢 [V0.8 — Multi-Match Planning](#-v08--multi-match-planning)
 - 🏗 [System Architecture](#-system-architecture)
 - ⚙ [Decision Flow](#-decision-flow)
 - 🧩 [Component Responsibilities](#-component-responsibilities)
@@ -89,6 +95,13 @@ They are allocated through a **global optimization process (MILP)** that ensures
 
 ---
 
+## 📚 Documentation
+
+- [System Architecture](docs/architecture.md)
+- [Decision Logic](docs/decision_logic.md)
+- [Optimization Layer](docs/optimization.md)
+- [Multi-Match Planning](docs/multi_match_planning.md)
+
 ---
 
 ## 🎯 Demo
@@ -97,26 +110,25 @@ The system moves from player evaluation to full multi-match planning under reali
 
 ### 1. Player decision space (risk vs value)
 
-
 ![Decision Space](assets/demo/decision_space.png)
 
-
 Players are evaluated based on:
+
 - `risk_score`
 - `value_score`
 
 This defines the initial decision policy:
-- start
-- limit_minutes
-- bench
+
+- `start`
+- `limit_minutes`
+- `bench`
 
 ### 2. Optimized lineup under constraints
 
-
 ![Optimized Lineup](assets/demo/optimized_lineup_M1.png)
 
-
 The system builds an optimal XI considering:
+
 - formation constraints (4-3-3)
 - positional eligibility
 - player utility
@@ -124,17 +136,16 @@ The system builds an optimal XI considering:
 
 ### 3. Multi-match planning under congestion
 
-
 ![Fatigue Heatmap](assets/demo/fatigue_heatmap.png)
 
-
 Across multiple matches, the system:
+
 - allocates player exposure
 - manages fatigue accumulation
 - rotates squad intelligently
 - adapts to match importance
 
-The result is not just a lineup — but a **planning strategy across matches**.
+The result is not just a lineup, but a **planning strategy across matches**.
 
 ---
 
@@ -143,7 +154,7 @@ The result is not just a lineup — but a **planning strategy across matches**.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/football-decision-engine.git
+git clone https://github.com/manuelpeba/football-decision-engine.git
 cd football-decision-engine
 ```
 
@@ -171,11 +182,10 @@ jupyter notebook
 
 Run in order:
 
-`01_decision_boundary_elite.ipynb`
-`02_matchday_simulation_elite.ipynb`
-`03_lineup_optimization_elite.ipynb`
-`04_multi_match_planning_elite.ipynb`
-
+1. `01_decision_boundary_elite.ipynb`
+2. `02_matchday_simulation_elite.ipynb`
+3. `03_lineup_optimization_elite.ipynb`
+4. `04_multi_match_planning_elite.ipynb`
 
 ### 5. Run core engine (optional)
 
@@ -190,15 +200,6 @@ python run.py
 - Optimized starting XI
 - Multi-match exposure planning
 - Fatigue-aware squad management
-
----
-
-## 📚 Documentation
-
-- [System Architecture](docs/architecture.md)
-- [Decision Logic](docs/decision_logic.md)
-- [Optimization Layer](docs/optimization.md)
-- [Multi-Match Planning](docs/multi_match_planning.md)
 
 ---
 
@@ -263,7 +264,7 @@ These notebooks are not independent analyses, but **progressive layers of the sa
 
 ---
 
-## 🔢 v0.8 — Multi-Match Planning
+## 🔢 V0.8 — Multi-Match Planning
 
 The system has been extended from single-match optimization to **multi-match planning under congestion**.
 
@@ -272,8 +273,6 @@ Instead of optimizing decisions in isolation, the engine now allocates player ex
 - match importance
 - opponent strength
 - recovery windows
-
----
 
 ### ⚙️ Planning Objective
 
@@ -288,8 +287,6 @@ The system decides:
 - who is benched strategically
 - how fatigue evolves across the sequence
 
----
-
 ### 🔁 Exposure Allocation
 
 Each player is assigned one of:
@@ -302,8 +299,6 @@ Each player is assigned one of:
 
 These decisions are optimized **jointly across matches**, not independently.
 
----
-
 ### 🧠 Key Behaviors
 
 The system learns structurally different strategies per unit:
@@ -313,24 +308,20 @@ The system learns structurally different strategies per unit:
 - **Midfield** → load balancing (frequent partial exposure)
 - **Attack** → risk-managed allocation (rotation + protection)
 
----
-
 ### 📊 Example Outcome
 
 Across a three-match horizon:
 
-- Core players maintain consistent exposure
-- High-risk attackers are selectively protected
-- Lower-priority matches absorb rotation
-- Fatigue accumulates and influences later decisions
-
----
+- core players maintain consistent exposure
+- high-risk attackers are selectively protected
+- lower-priority matches absorb rotation
+- fatigue accumulates and influences later decisions
 
 ### 🧱 System Evolution
 
 The project now follows a clear progression:
 
-Prediction → Policy → Matchday Optimization → Multi-Match Planning
+`Prediction → Policy → Matchday Optimization → Multi-Match Planning`
 
 This final layer transforms the system into a **Football Decision Intelligence Engine**.
 
@@ -344,51 +335,76 @@ flowchart LR
     B --> C[Initial Decisions]
     C --> D[MILP Optimization]
     D --> E[Final Decisions]
+    E --> F[Planning Layer]
 ```
 
 ---
 
 ## ⚙ Decision Flow
 
-``` mermaid
+```mermaid
 flowchart TD
     A[risk_score + value_score] --> B[Policy Rules]
     B --> C[Initial Decision]
     C --> D[Utility Computation]
     D --> E[Optimization]
-    E --> F[Final Output]
+    E --> F[Formation-Constrained Lineup]
+    F --> G[Multi-Match Planning]
+    G --> H[Final Output]
 ```
 
 ---
 
 ## 🧩 Component Responsibilities
 
-| Component         | Responsibility            |
+| Component | Responsibility |
 | ----------------- | ------------------------- |
-| engine.py         | Orchestration             |
-| decision.py       | Rule-based classification |
-| policies.py       | Config validation         |
-| constraints.py    | Squad constraints         |
-| optimizer_milp.py | Global optimization       |
+| `engine.py` | Orchestration |
+| `decision.py` | Rule-based classification |
+| `policies.py` | Config validation |
+| `constraints.py` | Squad constraints |
+| `optimizer_milp.py` | Global optimization |
+| `notebooks/` | Progressive demonstrations of the system |
+| `docs/` | Technical and conceptual documentation |
+| `assets/demo/` | README demo visuals |
 
 ---
 
 ## 📁 Project Structure
 
 ```bash
+assets/
+└── demo/
+    ├── decision_space.png
+    ├── optimized_lineup_M1.png
+    └── fatigue_heatmap.png
+
+docs/
+├── architecture.md
+├── decision_logic.md
+├── optimization.md
+└── multi_match_planning.md
+
+notebooks/
+├── README.md
+├── 01_decision_boundary_elite.ipynb
+├── 02_matchday_simulation_elite.ipynb
+├── 03_lineup_optimization_elite.ipynb
+└── 04_multi_match_planning_elite.ipynb
+
 src/
 ├── engine.py
 ├── decision.py
 ├── policies.py
 ├── constraints.py
-├── optimizer_milp.py
+└── optimizer_milp.py
 ```
 
 ---
 
 ## ▶ Running
 
-``` bash
+```bash
 python run.py
 ```
 
@@ -398,39 +414,49 @@ python run.py
 
 ### Input
 
-| Column      | Description                |
+| Column | Description |
 | ----------- | -------------------------- |
-| player_id   | Player identifier          |
-| risk_score  | Injury / availability risk |
-| value_score | Expected contribution      |
+| `player_id` | Player identifier |
+| `risk_score` | Injury / availability risk |
+| `value_score` | Expected contribution |
 
 ### Output
 
-| Column         | Description                   |
+| Column | Description |
 | -------------- | ----------------------------- |
-| decision       | start / limit_minutes / bench |
-| reason         | Explanation                   |
-| priority_score | Utility                       |
+| `decision` | `start` / `limit_minutes` / `bench` |
+| `reason` | Explanation |
+| `priority_score` | Utility |
 
 ---
 
 ## ⚠ Limitations
 
-- no match context (importance, opponent)
-- no positional constraints
-- no fatigue/load modeling
-- static utility parameters
+The current version already includes:
+
+- match context (importance, opponent)
+- tactical constraints
+- fatigue/load planning
+- horizon-aware exposure allocation
+
+Current limitations remain:
+
+- no uncertainty layer over player availability
+- no probabilistic scenario planning
+- no opponent-specific tactical adaptation by role
+- no robust optimization under multiple recovery scenarios
+- static utility parameters calibrated manually
 
 ---
 
 ## 🚀 Future Improvements
 
-| Version | Feature                           |
+| Version | Feature |
 | ------- | --------------------------------- |
-| v0.6    | Context-aware decisions           |
-| v0.7    | Tactical constraints              |
-| v0.8    | Fatigue & load modeling           |
-| v1.0    | Full decision intelligence system |
+| v0.9 | Scenario-based planning under uncertainty |
+| v1.0 | Full decision intelligence system |
+| v1.1 | Opponent-aware tactical adaptation |
+| v1.2 | Robust optimization across availability scenarios |
 
 ---
 
@@ -438,9 +464,9 @@ python run.py
 
 Most football analytics projects focus on:
 
-* prediction
-* dashboards
-* ranking players
+- prediction
+- dashboards
+- ranking players
 
 This project focuses on:
 
@@ -448,9 +474,9 @@ This project focuses on:
 
 It demonstrates the ability to:
 
-* design systems (not just models)
-* formalize trade-offs
-* apply optimization to real problems
+- design systems (not just models)
+- formalize trade-offs
+- apply optimization to real problems
 
 ---
 
@@ -462,10 +488,10 @@ Data Scientist building decision systems for football | Risk, Value & Optimizati
 
 Specializing in:
 
-* Sports analytics and forecasting
-* Probabilistic simulation systems
-* Machine learning for football prediction
-* Production-ready data pipelines
+- Sports analytics and forecasting
+- Probabilistic simulation systems
+- Machine learning for football prediction
+- Production-ready data pipelines
 
 📧 [manuelpeba@gmail.com](mailto:manuelpeba@gmail.com)
 

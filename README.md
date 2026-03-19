@@ -261,8 +261,9 @@ It demonstrates the ability to:
 
 ## 👤 Author
 
-Manuel Pérez Bañuls/
-Data Scientist | Football Analytics Enthusiast | Probabilistic Modeling
+Manuel Pérez Bañuls
+
+Data Scientist building decision systems for football | Risk, Value & Optimization
 
 Specializing in:
 

@@ -2,73 +2,131 @@
 
 ### Building end-to-end decision systems for football: from data to actionable insights under real-world constraints.
 
-Decision engine for football player management actions.
+![Python](https://img.shields.io/badge/python-3.10+-blue)
+![Status](https://img.shields.io/badge/status-active-success)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Optimization](https://img.shields.io/badge/optimization-MILP-orange)
 
-## Objective
-Move from prediction to action:
-- not only estimate what may happen
-- but recommend what should be done
+------------------------------------------------------------------------
 
-## MVP
-The MVP combines:
-- risk_score
-- value_score
+## 📊 Executive Summary
 
-to produce actionable recommendations:
-- start
-- bench
-- limit_minutes
+Decision Intelligence system that transforms player data into optimal
+football decisions under real-world constraints.
 
-## Input
-CSV with:
-- player_id
-- risk_score
-- value_score
+------------------------------------------------------------------------
 
-## Output
-CSV with:
-- player_id
-- risk_score
-- value_score
-- decision
-- reason
+## ⭐ Key Features
 
-## Run
+  Feature             Description
+  ------------------- ---------------------
+  Decision Engine     Actionable outputs
+  Policy-driven       Configurable
+  MILP Optimization   Global optimum
+  Risk-aware          Explicit trade-offs
 
-```bash
+------------------------------------------------------------------------
+
+## 🛠 Tech Stack
+
+  Layer          Tech
+  -------------- --------
+  Language       Python
+  Data           pandas
+  Optimization   PuLP
+
+------------------------------------------------------------------------
+
+## 📑 Table of Contents
+
+-   🧠 Project Objective
+-   🏗 System Architecture
+-   ⚙ Decision Flow
+-   📁 Project Structure
+-   ▶ Running the Engine
+-   📥 Input/Output
+-   ⚠ Limitations
+-   🚀 Future Improvements
+-   👤 Author
+
+------------------------------------------------------------------------
+
+## 🧠 Project Objective
+
+Move from prediction → decision.
+
+------------------------------------------------------------------------
+
+## 🏗 System Architecture
+
+``` mermaid
+flowchart LR
+    A[Input] --> B[Rules]
+    B --> C[MILP]
+    C --> D[Decisions]
+```
+
+------------------------------------------------------------------------
+
+## ⚙ Decision Flow
+
+``` mermaid
+flowchart TD
+    A[risk + value] --> B[policy]
+    B --> C[initial decision]
+    C --> D[optimization]
+    D --> E[final output]
+```
+
+------------------------------------------------------------------------
+
+## 📁 Project Structure
+
+    src/
+    ├── engine.py
+    ├── decision.py
+    ├── optimizer_milp.py
+
+------------------------------------------------------------------------
+
+## ▶ Running
+
+``` bash
 python run.py
 ```
----
 
-## Versioning
+------------------------------------------------------------------------
 
-- v0.1 — Rule-based decision engine (MVP)
-- v0.2 — Policy-driven architecture with configurable thresholds
-- v0.3 — Multi-constraint system for squad-level decision consistency
-- v0.4 — (Planned) Optimization layer for decision allocation under constraints
+## 📥 Input/Output
 
----
+  Input         Output
+  ------------- ----------
+  risk_score    decision
+  value_score   reason
 
-## Author & Contact
+------------------------------------------------------------------------
 
-**Manuel Pérez Bañuls**  
-Data Scientist | Football Analytics Enthusiast | Probabilistic Modeling
+## ⚠ Limitations
 
-Specializing in:
-- Sports analytics and forecasting
-- Probabilistic simulation systems
-- Machine learning for football prediction
-- Production-ready data pipelines
+-   no context
+-   no tactics
 
-**Connect & Collaborate**:
-- 📧 Email: [manuelpeba@gmail.com](mailto:manuelpeba@gmail.com)
-- 💼 LinkedIn: [manuel-perez-banuls](https://www.linkedin.com/in/manuel-perez-banuls/)
-- 🐙 GitHub: [manuelpeba](https://github.com/manuelpeba)
+------------------------------------------------------------------------
 
-Interested in discussing sports analytics, forecasting systems, or data-driven decision-making? Feel free to reach out.
+## 🚀 Future Improvements
 
----
+-   context-aware decisions
+-   tactical constraints
+-   fatigue modeling
 
-## License
+------------------------------------------------------------------------
 
-MIT License
+## 👤 Author
+
+Manuel Pérez Bañuls\
+Data Scientist \| Football Analytics Enthusiast \| Probabilistic
+Modeling
+
+📧 manuelpeba@gmail.com\
+💼 manuel-perez-banuls\
+🐙 manuelpeba

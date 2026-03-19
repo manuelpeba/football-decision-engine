@@ -27,3 +27,19 @@ Policy-driven layer translating player signals into actions.
 - interpretability  
 - domain reasoning  
 - modularity  
+
+---
+
+## Horizon-Aware Decisions (v0.8)
+
+In the multi-match setting, decisions are no longer independent.
+
+A player classified as `start` by policy may be:
+
+- benched in a lower-priority match
+- limited to preserve availability
+- reintroduced in a higher-value match
+
+This introduces a new concept:
+
+> decisions are evaluated relative to the planning horizon, not just the current match

@@ -173,32 +173,7 @@ flowchart TD
     B -- Yes --> D{High value?}
     D -- Yes --> E[limit_minutes]
     D -- No --> F[bench]
-	```
-
-Sí. Te dejo ambas partes listas para añadir a `docs/optimization.md`, con formato Markdown real y orientadas a portfolio serio.
-
----
-
-## Bloque para añadir a `docs/optimization.md`
-
-````markdown
-## 📉 Conceptual Decision Boundary
-
-The current system can be interpreted as a simplified decision surface over two dimensions:
-
-- **Risk score**
-- **Value score**
-
-At a conceptual level, the policy behaves as follows:
-
-```mermaid
-flowchart TD
-    A[Player] --> B{High risk?}
-    B -- No --> C[start]
-    B -- Yes --> D{High value?}
-    D -- Yes --> E[limit_minutes]
-    D -- No --> F[bench]
-````
+```
 
 A more football-oriented view is the following decision map:
 
@@ -417,6 +392,35 @@ These examples illustrate two important properties of the model:
    * risk can materially change the recommendation
 
 This is why the project is fundamentally a decision system rather than a ranking model.
+
+---
+
+## Multi-Match Optimization (v0.8)
+
+The optimization problem is extended from:
+
+`maximize utility(match)`
+
+to:
+
+`maximize Σ utility(match_i)`
+
+### Additional Constraints
+
+- fatigue accumulation across matches
+- exposure balancing
+- contextual value per match
+
+### Key Difference
+
+Single-match optimization is **myopic**.  
+Multi-match optimization is **horizon-aware**.
+
+This enables:
+
+- strategic rotation
+- protection of high-risk players
+- better global outcomes
 
 ---
 

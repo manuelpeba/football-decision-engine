@@ -73,6 +73,8 @@ They are allocated through a **global optimization process (MILP)** that ensures
 - 📚 [Documentation](#-documentation)
 - 🧠 [Project Objective](#-project-objective)
 - ⚽ [Real-world Use Case (Matchday Scenario)](#-real-world-use-case-matchday-scenario)
+- 📊 [Notebooks (Progressive Demonstrations)](#-notebooks-progressive-demostrations)
+- 🔢 [v0.8 — Multi-Match Planning](#-v08-multi--match-planning)
 - 🏗 [System Architecture](#-system-architecture)
 - ⚙ [Decision Flow](#-decision-flow)
 - 🧩 [Component Responsibilities](#-component-responsibilities)
@@ -87,11 +89,116 @@ They are allocated through a **global optimization process (MILP)** that ensures
 
 ---
 
+---
+
+## 🎯 Demo
+
+The system moves from player evaluation to full multi-match planning under realistic constraints.
+
+### 1. Player decision space (risk vs value)
+
+
+![Decision Space](assets/demo/decision_space.png)
+
+
+Players are evaluated based on:
+- `risk_score`
+- `value_score`
+
+This defines the initial decision policy:
+- start
+- limit_minutes
+- bench
+
+### 2. Optimized lineup under constraints
+
+
+![Optimized Lineup](assets/demo/optimized_lineup_M1.png)
+
+
+The system builds an optimal XI considering:
+- formation constraints (4-3-3)
+- positional eligibility
+- player utility
+- risk management
+
+### 3. Multi-match planning under congestion
+
+
+![Fatigue Heatmap](assets/demo/fatigue_heatmap.png)
+
+
+Across multiple matches, the system:
+- allocates player exposure
+- manages fatigue accumulation
+- rotates squad intelligently
+- adapts to match importance
+
+The result is not just a lineup — but a **planning strategy across matches**.
+
+---
+
+## ⚡ Quick Start
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/football-decision-engine.git
+cd football-decision-engine
+```
+
+### 2. Create environment
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # macOS / Linux
+.venv\Scripts\activate      # Windows
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Run notebooks (recommended)
+
+Start with:
+
+```bash
+jupyter notebook
+```
+
+Run in order:
+
+`01_decision_boundary_elite.ipynb`
+`02_matchday_simulation_elite.ipynb`
+`03_lineup_optimization_elite.ipynb`
+`04_multi_match_planning_elite.ipynb`
+
+
+### 5. Run core engine (optional)
+
+```bash
+python run.py
+```
+
+### 🧪 What you will see
+
+- Player-level decision logic
+- Matchday simulation
+- Optimized starting XI
+- Multi-match exposure planning
+- Fatigue-aware squad management
+
+---
+
 ## 📚 Documentation
 
 - [System Architecture](docs/architecture.md)
 - [Decision Logic](docs/decision_logic.md)
 - [Optimization Layer](docs/optimization.md)
+- [Multi-Match Planning](docs/multi_match_planning.md)
 
 ---
 
@@ -138,6 +245,94 @@ and produces decisions such as:
 | Low value | `bench` |
 
 All decisions are optimized **jointly**, not individually.
+
+---
+
+## 📊 Notebooks (Progressive Demonstrations)
+
+The project includes a set of notebooks that illustrate the evolution of the system from simple decision rules to horizon-aware planning:
+
+| Notebook | Focus |
+|--------|------|
+| `01_decision_boundary_elite.ipynb` | Risk vs value decision space |
+| `02_matchday_simulation_elite.ipynb` | Policy-based matchday decisions |
+| `03_lineup_optimization_elite.ipynb` | Formation-constrained optimization |
+| `04_multi_match_planning_elite.ipynb` | Multi-match planning under congestion |
+
+These notebooks are not independent analyses, but **progressive layers of the same decision system**.
+
+---
+
+## 🔢 v0.8 — Multi-Match Planning
+
+The system has been extended from single-match optimization to **multi-match planning under congestion**.
+
+Instead of optimizing decisions in isolation, the engine now allocates player exposure across a sequence of matches with different:
+
+- match importance
+- opponent strength
+- recovery windows
+
+---
+
+### ⚙️ Planning Objective
+
+Move from:
+
+**Match-level optimization → Horizon-level planning**
+
+The system decides:
+
+- who starts each match
+- who is protected (`limit_minutes`)
+- who is benched strategically
+- how fatigue evolves across the sequence
+
+---
+
+### 🔁 Exposure Allocation
+
+Each player is assigned one of:
+
+| Decision | Meaning |
+|--------|--------|
+| `start` | Full exposure |
+| `limit_minutes` | Controlled load |
+| `bench` | No exposure |
+
+These decisions are optimized **jointly across matches**, not independently.
+
+---
+
+### 🧠 Key Behaviors
+
+The system learns structurally different strategies per unit:
+
+- **Goalkeeper** → deterministic (fixed starter)
+- **Defence** → stability (binary decisions)
+- **Midfield** → load balancing (frequent partial exposure)
+- **Attack** → risk-managed allocation (rotation + protection)
+
+---
+
+### 📊 Example Outcome
+
+Across a three-match horizon:
+
+- Core players maintain consistent exposure
+- High-risk attackers are selectively protected
+- Lower-priority matches absorb rotation
+- Fatigue accumulates and influences later decisions
+
+---
+
+### 🧱 System Evolution
+
+The project now follows a clear progression:
+
+Prediction → Policy → Matchday Optimization → Multi-Match Planning
+
+This final layer transforms the system into a **Football Decision Intelligence Engine**.
 
 ---
 

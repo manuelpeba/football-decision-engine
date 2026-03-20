@@ -136,7 +136,7 @@ The system builds an optimal XI considering:
 
 ### 3. Multi-match planning under congestion
 
-![Fatigue Heatmap](assets/demo/fatigue_heatmap.png)
+![Multi-match planning](assets/demo/multi_match_planning.png)
 
 Across multiple matches, the system:
 
@@ -377,7 +377,7 @@ assets/
 └── demo/
     ├── decision_space.png
     ├── optimized_lineup_M1.png
-    └── fatigue_heatmap.png
+    └── multi_match_planning.png
 
 docs/
 ├── architecture.md

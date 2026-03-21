@@ -1,463 +1,366 @@
 # Optimization Layer (MILP)
 
-## 📌 Overview
+## Overview
 
-The optimization layer is the core component that transforms individual player recommendations into a **globally optimal squad decision plan**.
+The **optimization layer** is the core allocation engine of the Football Decision Engine.
 
-Unlike rule-based systems, this layer ensures that decisions are:
+Its role is to transform player-level decision candidates into a **globally optimal squad decision** under real-world constraints.
 
-- globally consistent
-- constraint-aware
-- aligned with squad-level objectives
+While the decision logic layer defines *what actions are appropriate*, the optimization layer determines:
 
-The problem is formulated as a **Mixed Integer Linear Programming (MILP)** model.
+> **Which actions should actually be assigned to each player given squad-level constraints?**
 
----
+This distinction is critical.
 
-## 🧠 Problem Formulation
-
-We aim to solve:
-
-> Assign an action to each player that maximizes total squad utility under real-world constraints.
+Without optimization, decisions would be made independently.  
+With optimization, decisions are **jointly allocated across the squad**.
 
 ---
 
-## 🔢 Inputs
+## Why Optimization Matters in Football
 
-For each player *i*:
+Football decision-making is inherently constrained:
 
-- `value_scoreᵢ ∈ [0,1]` → expected contribution
-- `risk_scoreᵢ ∈ [0,1]` → injury / availability risk
+- limited number of starters
+- limited number of players that can be protected
+- positional and formation requirements
+- exposure limits under congestion
+- trade-offs between players competing for the same role
 
-From policy:
+A player may be a strong candidate to start individually, but:
 
-- `risk_penalty`
-- squad constraints
+- there may not be enough starting slots
+- another player may offer better value-risk trade-off
+- the squad may require balance across positions
 
----
-
-## 📐 Base Utility Function
-
-The system defines a risk-adjusted utility:
-
-```math
-base_scoreᵢ = value_scoreᵢ - λ · risk_scoreᵢ
-```
-
-Where:
-
-* λ = `risk_penalty`
-* controls risk aversion
-
----
-
-## 🎯 Decision Variables
-
-For each player *i*:
-
-```math
-x_{start,i}, x_{limit,i}, x_{bench,i} ∈ {0,1}
-```
-
-Subject to:
-
-```math
-x_{start,i} + x_{limit,i} + x_{bench,i} = 1
-```
-
-Each player receives exactly one action.
-
----
-
-## ⚙️ Action-Specific Utility
-
-The model defines different utilities depending on the action:
-
-```math
-U_{start,i} = base_scoreᵢ - α · risk_scoreᵢ
-```
-
-```math
-U_{limit,i} = base_scoreᵢ
-```
-
-```math
-U_{bench,i} = β · base_scoreᵢ
-```
-
-Where:
-
-* α = extra penalty for risky starters
-* β < 1 reduces bench contribution
-
----
-
-## 🧮 Objective Function
-
-```math
-\max \sum_i \left(
-U_{start,i} · x_{start,i}
-+
-U_{limit,i} · x_{limit,i}
-+
-U_{bench,i} · x_{bench,i}
-\right)
-```
-
----
-
-## 🚧 Constraints
-
-### 1. Limited Minutes Constraint
-
-```math
-\sum_i x_{limit,i} \leq max\_limit\_minutes
-```
-
----
-
-### 2. Bench Constraint
-
-```math
-\sum_i x_{bench,i} \leq max\_bench
-```
-
----
-
-### 3. Minimum Starters Constraint
-
-```math
-\sum_i x_{start,i} \geq min\_start
-```
-
----
-
-## 🧠 Interpretation
-
-The model balances:
-
-| Component   | Role                |
-| ----------- | ------------------- |
-| Value       | upside contribution |
-| Risk        | downside exposure   |
-| Constraints | squad feasibility   |
-
----
-
-## ⚽ Football Interpretation
-
-Typical outcomes:
-
-| Player Type           | Decision      |
-| --------------------- | ------------- |
-| High value, low risk  | start         |
-| High value, high risk | limit_minutes |
-| Low value             | bench         |
-
-
----
-
-## 📉 Conceptual Decision Boundary
-
-The current system can be interpreted as a simplified decision surface over two dimensions:
-
-- **Risk score**
-- **Value score**
-
-At a conceptual level, the policy behaves as follows:
-
-```mermaid
-flowchart TD
-    A[Player] --> B{High risk?}
-    B -- No --> C[start]
-    B -- Yes --> D{High value?}
-    D -- Yes --> E[limit_minutes]
-    D -- No --> F[bench]
-```
-
-A more football-oriented view is the following decision map:
-
-| Risk Level | Value Level | Likely Decision                 | Football Interpretation                       |
-| ---------- | ----------- | ------------------------------- | --------------------------------------------- |
-| Low        | High        | `start`                         | Strong contribution with acceptable exposure  |
-| Low        | Low         | `start` or low-priority starter | Available player, but with limited upside     |
-| High       | High        | `limit_minutes`                 | Important player who should be protected      |
-| High       | Low         | `bench`                         | Downside risk outweighs expected contribution |
-
-### Intuition Behind the Boundary
-
-This decision structure reflects a simple but operationally meaningful principle:
-
-* **availability enables selection**
-* **value justifies exposure**
-* **risk constrains usage**
-
-In other words:
-
-* low-risk players are generally safe to start
-* high-risk players require stronger value justification
-* low-value and high-risk combinations are the clearest bench candidates
-
-This is not yet a continuous nonlinear boundary, but it is a practical first approximation of football decision logic that remains highly interpretable.
-
----
-
-## 🔢 Worked Numerical Example
-
-### Scenario
-
-Assume the club is preparing for a league match with the following policy parameters:
-
-* `risk_penalty = 0.50`
-* extra start risk penalty = `0.20`
-* bench utility multiplier = `0.30`
-
-We evaluate a realistic player profile:
-
-| Variable      |           Value |
-| ------------- | --------------: |
-| Player        | Starting winger |
-| `risk_score`  |            0.70 |
-| `value_score` |            0.90 |
-
-This represents a player with:
-
-* very high expected contribution
-* but substantial injury / availability risk
-
----
-
-### Step 1 — Compute Base Score
-
-The engine first computes:
-
-```math
-base\_score = value\_score - risk\_penalty \cdot risk\_score
-```
-
-Substituting values:
-
-```math
-base\_score = 0.90 - 0.50 \cdot 0.70
-```
-
-```math
-base\_score = 0.90 - 0.35 = 0.55
-```
-
-So the player's risk-adjusted base utility is:
+This means:
 
 ```text
-base_score = 0.55
-```
+optimal individual decisions ≠ optimal squad decisions
+````
+
+The optimization layer exists to resolve this.
 
 ---
 
-### Step 2 — Compute Utility for Each Action
+## Optimization Objective
 
-#### Start
+The system defines a utility function per player and action.
 
-```math
-U_{start} = base\_score - 0.20 \cdot risk\_score
-```
-
-```math
-U_{start} = 0.55 - 0.20 \cdot 0.70
-```
-
-```math
-U_{start} = 0.55 - 0.14 = 0.41
-```
-
-#### Limit Minutes
-
-```math
-U_{limit} = base\_score = 0.55
-```
-
-#### Bench
-
-```math
-U_{bench} = 0.30 \cdot base\_score
-```
-
-```math
-U_{bench} = 0.30 \cdot 0.55 = 0.165
-```
-
----
-
-### Step 3 — Compare Actions
-
-| Action          | Utility |
-| --------------- | ------: |
-| `start`         |   0.410 |
-| `limit_minutes` |   0.550 |
-| `bench`         |   0.165 |
-
-Under these parameters, the best action is:
+The global objective is:
 
 ```text
-limit_minutes
+maximize Σ utility(player, action)
 ```
+
+This means selecting the combination of decisions that maximizes total squad utility.
 
 ---
 
-### Football Interpretation
+## Utility Formulation
 
-This is exactly the type of decision a performance or coaching staff might want:
-
-* the player is too valuable to fully bench
-* the risk is too high for unrestricted starting exposure
-* limiting minutes preserves upside while controlling downside
-
-This is the core rationale behind the engine:
-
-> not simply selecting the best player, but selecting the best action for the player under risk.
-
----
-
-## 🧪 Additional Example: Low-Value High-Risk Player
-
-Now consider a second player:
-
-| Variable      |                Value |
-| ------------- | -------------------: |
-| Player        | Rotational full-back |
-| `risk_score`  |                 0.80 |
-| `value_score` |                 0.35 |
-
-### Step 1 — Base Score
-
-```math
-base\_score = 0.35 - 0.50 \cdot 0.80 = 0.35 - 0.40 = -0.05
-```
-
-### Step 2 — Utilities
-
-#### Start
-
-```math
-U_{start} = -0.05 - 0.20 \cdot 0.80 = -0.05 - 0.16 = -0.21
-```
-
-#### Limit Minutes
-
-```math
-U_{limit} = -0.05
-```
-
-#### Bench
-
-```math
-U_{bench} = 0.30 \cdot (-0.05) = -0.015
-```
-
-### Step 3 — Compare Actions
-
-| Action          | Utility |
-| --------------- | ------: |
-| `start`         |  -0.210 |
-| `limit_minutes` |  -0.050 |
-| `bench`         |  -0.015 |
-
-Best action:
+The base utility for each player is defined as:
 
 ```text
-bench
+base_score = value_score - (risk_weight × risk_score)
 ```
 
-### Interpretation
+This encodes the central trade-off:
 
-Here the system identifies a very different profile:
-
-* high exposure
-* low expected contribution
-* poor justification for match involvement
-
-This makes `bench` the most rational decision.
+* reward performance contribution (`value_score`)
+* penalize exposure risk (`risk_score`)
 
 ---
 
-## 🧠 What These Examples Show
+## Action-Specific Utility
 
-These examples illustrate two important properties of the model:
+Each action modifies the base utility through configurable bonuses:
 
-1. **The same risk level does not imply the same action**
+* `start_bonus`
+* `limit_minutes_bonus`
+* `bench_bonus`
 
-   * value can justify controlled exposure
+Final utility per action:
 
-2. **The same value level does not imply the same action**
+```text
+utility_start = base_score + start_bonus
+utility_limit = base_score + limit_minutes_bonus
+utility_bench = base_score + bench_bonus
+```
 
-   * risk can materially change the recommendation
+### Important Design Choice
 
-This is why the project is fundamentally a decision system rather than a ranking model.
+These bonuses are:
+
+* **not hardcoded**
+* fully defined in the policy configuration
+
+This is a major architectural improvement.
+
+It allows:
+
+* easy tuning of system behavior
+* experimentation with different decision philosophies
+* reproducibility across runs
+* separation between logic and optimization
 
 ---
 
-## Multi-Match Optimization (v0.8)
+## Decision Variables
 
-The optimization problem is extended from:
+The MILP formulation uses binary decision variables.
 
-`maximize utility(match)`
+For each player `p`:
+
+* `x_start[p] ∈ {0,1}`
+* `x_limit[p] ∈ {0,1}`
+* `x_bench[p] ∈ {0,1}`
+
+---
+
+## Core Constraints
+
+### 1. One Action per Player
+
+Each player must be assigned exactly one action:
+
+```text
+x_start[p] + x_limit[p] + x_bench[p] = 1
+```
+
+---
+
+### 2. Squad-Level Constraints
+
+The system enforces constraints such as:
+
+* minimum number of starters
+* maximum number of starters
+* maximum number of limited-minute players
+* maximum number of bench players
+
+Examples:
+
+```text
+Σ x_start[p] ≥ min_start
+Σ x_start[p] ≤ max_start
+Σ x_limit[p] ≤ max_limit_minutes
+Σ x_bench[p] ≤ max_bench
+```
+
+These constraints are **policy-driven**, not hardcoded.
+
+---
+
+### 3. Optional Constraints (Extensible)
+
+The architecture supports adding further constraints, such as:
+
+* minimum exposure requirements
+* positional constraints
+* role-based allocation limits
+* match-specific restrictions
+
+---
+
+## MILP Formulation
+
+Putting everything together:
+
+### Objective
+
+```text
+maximize Σ_p (
+    utility_start[p] * x_start[p] +
+    utility_limit[p] * x_limit[p] +
+    utility_bench[p] * x_bench[p]
+)
+```
+
+### Subject to:
+
+* one action per player
+* squad-level constraints
+* binary decision variables
+
+---
+
+## Solver
+
+The current implementation uses:
+
+* **PuLP** as the modeling interface
+* **CBC (Coin-or Branch and Cut)** as the solver
+
+This setup provides:
+
+* exact optimization (not heuristic)
+* fast resolution for small-to-medium squad sizes
+* portability and simplicity
+
+---
+
+## Why MILP (and not heuristics)
+
+Many football analytics systems rely on:
+
+* greedy selection
+* rule-based allocation
+* ranking-based filtering
+
+These approaches:
+
+* do not guarantee global optimality
+* may produce inconsistent squad decisions
+* struggle with interacting constraints
+
+MILP provides:
+
+* **global optimality**
+* explicit constraint handling
+* flexibility to extend the model
+* transparency in formulation
+
+This is a key differentiator of the project.
+
+---
+
+## Relationship with Decision Logic
+
+The optimization layer does not replace decision logic.
+
+Instead, it builds on top of it:
+
+```text
+Decision Logic → defines action meaning
+Utility Layer → quantifies trade-offs
+Optimization → allocates actions globally
+```
+
+This separation ensures:
+
+* interpretability (decision layer)
+* mathematical consistency (optimization layer)
+
+---
+
+## Example Interpretation
+
+Consider two players:
+
+| Player | Value  | Risk |
+| ------ | ------ | ---- |
+| A      | high   | high |
+| B      | medium | low  |
+
+Individually:
+
+* Player A → strong candidate (`limit_minutes`)
+* Player B → strong candidate (`start`)
+
+However, if:
+
+* only one starting slot is available
+* risk penalties are high
+
+The optimizer may assign:
+
+* Player B → `start`
+* Player A → `limit_minutes`
+
+This illustrates:
+
+```text
+optimization resolves trade-offs between players
+```
+
+---
+
+## Integration with Multi-Match Planning
+
+In multi-match scenarios, the optimization layer is applied repeatedly or extended across a horizon.
+
+This introduces:
+
+* exposure accumulation
+* fatigue effects
+* inter-match dependencies
+
+The optimization problem evolves from:
+
+```text
+single-step allocation
+```
 
 to:
 
-`maximize Σ utility(match_i)`
-
-### Additional Constraints
-
-- fatigue accumulation across matches
-- exposure balancing
-- contextual value per match
-
-### Key Difference
-
-Single-match optimization is **myopic**.  
-Multi-match optimization is **horizon-aware**.
-
-This enables:
-
-- strategic rotation
-- protection of high-risk players
-- better global outcomes
+```text
+multi-step planning problem
+```
 
 ---
 
-## 🧩 Why MILP
+## Current Strengths
 
-MILP is chosen because:
-
-* decisions are discrete
-* constraints are strict
-* objective is well-defined
-* global optimality is required
-
----
-
-## ⚖️ Trade-offs
-
-| Approach | Pros    | Cons         |
-| -------- | ------- | ------------ |
-| Rules    | Simple  | Not optimal  |
-| Greedy   | Fast    | Myopic       |
-| MILP     | Optimal | More complex |
+* Exact optimization (MILP)
+* Config-driven utility and constraints
+* Clear separation between layers
+* Interpretable objective function
+* Strong alignment with real football constraints
 
 ---
 
-## 🔮 Future Extensions
+## Current Limitations
 
-* positional constraints (formation-aware)
-* opponent-adjusted utility
-* fatigue-aware penalties
-* uncertainty modeling (CVaR)
+The current implementation does not yet include:
+
+* uncertainty-aware optimization
+* stochastic or robust formulations
+* opponent-specific constraints
+* dynamic utility updates across matches
+* advanced positional / tactical constraints in core engine
+
+These are planned extensions.
 
 ---
 
-## 🏁 Summary
+## Extension Path
 
-This layer elevates the system from:
+### Near-term
 
-> prediction → recommendation → **optimal decision-making**
+* scenario-based optimization
+* uncertainty in player availability
+* match importance weighting
 
-It is the core element that transforms the project into a **Decision Intelligence System**.
+### Medium-term
+
+* opponent-aware utility
+* role-based constraints
+* dynamic fatigue modeling
+
+### Long-term
+
+* robust optimization
+* simulation-integrated decision systems
+* real-time decision support
+
+---
+
+## Optimization Takeaway
+
+The optimization layer is what transforms the system from:
+
+```text
+decision suggestions
+```
+
+into:
+
+```text
+decision allocation under constraints
+```
+
+This is the key step that makes the Football Decision Engine a true **decision intelligence system**, rather than a traditional analytics pipeline.
+
+It ensures that decisions are not only reasonable individually, but **optimal collectively**.
+

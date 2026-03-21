@@ -147,6 +147,7 @@ This project addresses that gap by formalizing decision-making as an optimizatio
 A realistic match congestion scenario showing how the system supports squad-level decision-making:
 
 👉 [Read full case study](docs/case_study.md)
+👉 [View slide case study](assets/case_study/case_study_slide.pptx)
 
 ---
 
@@ -431,6 +432,8 @@ assets/
     ├── decision_space.png
     ├── optimized_lineup_M1.png
     └── multi_match_planning.png
+└── case_study/
+    └── case_study_slide.pptx
 
 docs/
 ├── system_design.md

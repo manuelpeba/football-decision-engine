@@ -1,4 +1,3 @@
-Perfecto — esto es exactamente el tipo de pieza que **marca la diferencia en entrevistas**.
 # ⚽ Case Study — Match Congestion Decision Scenario
 
 ## Context

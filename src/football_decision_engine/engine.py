@@ -8,7 +8,7 @@ from .decision import (
     build_thresholds,
     classify_decision,
 )
-from .optimizer_milp import apply_milp_optimization
+from .optimizer_milp import optimize_squad
 from .policies import load_policy
 
 
@@ -33,8 +33,6 @@ class DecisionEngine:
         self.thresholds = build_thresholds(self.policy)
         self.actions = build_actions(self.policy)
         self.constraints = self.policy["constraints"]
-        self.optimization = self.policy["optimization"]
-        self.milp = self.policy["milp"]
 
     def load_data(self, input_path: str | Path) -> pd.DataFrame:
         input_path = Path(input_path)
@@ -90,11 +88,12 @@ class DecisionEngine:
             axis=1,
         )
 
-        output_df = apply_milp_optimization(
+        milp_config = self.policy["milp"]
+
+        output_df = optimize_squad(
             output_df,
             constraints=self.constraints,
-            optimization_config=self.optimization,
-            milp_config=self.milp,
+            milp_config=milp_config
         )
 
         return output_df

@@ -1,116 +1,167 @@
 import pandas as pd
-import pulp
+from pulp import (
+    LpBinary,
+    LpMaximize,
+    LpProblem,
+    LpStatus,
+    LpVariable,
+    PULP_CBC_CMD,
+    lpSum,
+    value,
+)
 
 
-def apply_milp_optimization(
+def optimize_squad(
     df: pd.DataFrame,
     constraints: dict,
-    optimization_config: dict,
     milp_config: dict,
 ) -> pd.DataFrame:
     """
-    Solve final player decisions as a MILP.
+    Optimize player decisions using MILP.
 
-    Decision variables:
-    - x_start_i
-    - x_limit_i
-    - x_bench_i
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Must contain:
+        - player_id
+        - risk_score
+        - value_score
 
-    Objective:
-    maximize action-adjusted utility under squad constraints.
+    constraints : dict
+        Supported keys:
+        - min_start
+        - max_start
+        - max_limit_minutes
+        - max_bench
+        Optional:
+        - min_limit_minutes
+        - min_bench
+
+    milp_config : dict
+        Expected keys:
+        - risk_weight
+        - start_bonus
+        - limit_minutes_bonus
+        - bench_bonus
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with final optimized decision, reason and priority_score.
     """
+    required_cols = {"player_id", "risk_score", "value_score"}
+    missing = required_cols - set(df.columns)
+    if missing:
+        raise ValueError(
+            f"Missing required columns for MILP optimization: {sorted(missing)}"
+        )
+
     df = df.copy().reset_index(drop=True)
 
-    risk_penalty = float(optimization_config["risk_penalty"])
+    players = df["player_id"].tolist()
 
-    # Compute base player utility
-    df["base_score"] = df["value_score"] - risk_penalty * df["risk_score"]
+    # Parameters from config
+    risk_weight = float(milp_config.get("risk_weight", 0.5))
+    start_bonus = float(milp_config.get("start_bonus", 0.0))
+    limit_bonus = float(milp_config.get("limit_minutes_bonus", 0.0))
+    bench_bonus = float(milp_config.get("bench_bonus", 0.0))
 
-    player_ids = df.index.tolist()
+    # Create optimization model
+    model = LpProblem("football_decision_engine", LpMaximize)
 
-    model = pulp.LpProblem("football_decision_engine", pulp.LpMaximize)
+    # Decision variables
+    x_start = {p: LpVariable(f"start_{p}", cat=LpBinary) for p in players}
+    x_limit = {p: LpVariable(f"limit_minutes_{p}", cat=LpBinary) for p in players}
+    x_bench = {p: LpVariable(f"bench_{p}", cat=LpBinary) for p in players}
 
-    x_start = pulp.LpVariable.dicts("start", player_ids, cat="Binary")
-    x_limit = pulp.LpVariable.dicts("limit_minutes", player_ids, cat="Binary")
-    x_bench = pulp.LpVariable.dicts("bench", player_ids, cat="Binary")
+    # Utility calculation
+    utilities = {}
 
-    # Precompute values (clean + safe)
-    base_scores = df["base_score"].to_dict()
-    risk_scores = df["risk_score"].to_dict()
+    for _, row in df.iterrows():
+        p = row["player_id"]
+        value_score = float(row["value_score"])
+        risk_score = float(row["risk_score"])
 
-    # 🔥 KEY DESIGN: action utilities with risk-aware trade-offs
-    start_utility = {
-        i: base_scores[i] - 0.2 * risk_scores[i]  # penalize risky starters
-        for i in player_ids
-    }
+        base_score = value_score - risk_weight * risk_score
 
-    limit_utility = {
-        i: base_scores[i]  # safer option, no extra penalty
-        for i in player_ids
-    }
-
-    bench_utility = {
-        i: 0.3 * base_scores[i]  # low contribution
-        for i in player_ids
-    }
+        utilities[p] = {
+            "base_score": base_score,
+            "start": base_score + start_bonus,
+            "limit_minutes": base_score + limit_bonus,
+            "bench": base_score + bench_bonus,
+        }
 
     # Objective function
-    model += pulp.lpSum(
-        start_utility[i] * x_start[i]
-        + limit_utility[i] * x_limit[i]
-        + bench_utility[i] * x_bench[i]
-        for i in player_ids
+    model += lpSum(
+        x_start[p] * utilities[p]["start"]
+        + x_limit[p] * utilities[p]["limit_minutes"]
+        + x_bench[p] * utilities[p]["bench"]
+        for p in players
     )
 
-    # Each player must receive exactly one decision
-    for i in player_ids:
-        model += x_start[i] + x_limit[i] + x_bench[i] == 1
+    # Each player gets exactly one action
+    for p in players:
+        model += x_start[p] + x_limit[p] + x_bench[p] == 1
 
-    # Squad-level constraints
-    model += pulp.lpSum(x_limit[i] for i in player_ids) <= int(constraints["max_limit_minutes"])
-    model += pulp.lpSum(x_bench[i] for i in player_ids) <= int(constraints["max_bench"])
-    model += pulp.lpSum(x_start[i] for i in player_ids) >= int(constraints["min_start"])
+    # Squad-level action constraints
+    if "min_start" in constraints:
+        model += lpSum(x_start[p] for p in players) >= int(constraints["min_start"])
+
+    if "max_start" in constraints:
+        model += lpSum(x_start[p] for p in players) <= int(constraints["max_start"])
+
+    if "min_limit_minutes" in constraints:
+        model += lpSum(x_limit[p] for p in players) >= int(
+            constraints["min_limit_minutes"]
+        )
+
+    if "max_limit_minutes" in constraints:
+        model += lpSum(x_limit[p] for p in players) <= int(
+            constraints["max_limit_minutes"]
+        )
+
+    if "min_bench" in constraints:
+        model += lpSum(x_bench[p] for p in players) >= int(constraints["min_bench"])
+
+    if "max_bench" in constraints:
+        model += lpSum(x_bench[p] for p in players) <= int(constraints["max_bench"])
 
     # Solve
-    solver = pulp.PULP_CBC_CMD(msg=False)
+    solver = PULP_CBC_CMD(msg=False)
     model.solve(solver)
 
-    status = pulp.LpStatus[model.status]
+    status = LpStatus[model.status]
     if status != "Optimal":
-        raise RuntimeError(f"MILP did not find an optimal solution. Solver status: {status}")
+        raise RuntimeError(
+            f"MILP did not find an optimal solution. Solver status: {status}"
+        )
 
-    # Extract results
-    decisions = []
-    reasons = []
+    # Build output
+    results = []
 
-    for i in player_ids:
-        if pulp.value(x_start[i]) == 1:
+    for _, row in df.iterrows():
+        p = row["player_id"]
+
+        if value(x_start[p]) == 1:
             decision = "start"
-        elif pulp.value(x_limit[i]) == 1:
+        elif value(x_limit[p]) == 1:
             decision = "limit_minutes"
         else:
             decision = "bench"
 
-        decisions.append(decision)
-        reasons.append(
-            f"MILP allocation | base_score={base_scores[i]:.3f} | risk={risk_scores[i]:.2f}"
+        results.append(
+            {
+                "player_id": p,
+                "risk_score": row["risk_score"],
+                "value_score": row["value_score"],
+                "decision": decision,
+                "reason": (
+                    f"MILP allocation | "
+                    f"base_score={utilities[p]['base_score']:.3f} | "
+                    f"risk={float(row['risk_score']):.2f}"
+                ),
+                "priority_score": utilities[p]["base_score"],
+            }
         )
 
-    df["decision"] = decisions
-    df["reason"] = reasons
-    df["priority_score"] = df["base_score"]
-
-    # Sorting (important for interpretability)
-    decision_order = {"bench": 0, "limit_minutes": 1, "start": 2}
-    df["decision_rank"] = df["decision"].map(decision_order)
-
-    df = (
-        df.sort_values(
-            by=["decision_rank", "priority_score", "player_id"],
-            ascending=[True, False, True],
-        )
-        .drop(columns=["decision_rank", "base_score"])
-        .reset_index(drop=True)
-    )
-
-    return df
+    return pd.DataFrame(results)

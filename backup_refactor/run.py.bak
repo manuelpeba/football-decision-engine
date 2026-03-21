@@ -1,6 +1,6 @@
 import logging
 
-from football_decision_engine.engine import DecisionEngine
+from src.engine import DecisionEngine
 
 
 logging.basicConfig(

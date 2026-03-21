@@ -111,6 +111,7 @@ This project addresses that gap by formalizing decision-making as an optimizatio
 ## 📑 Table of Contents
 
 - 📚 [Documentation](#-documentation)
+- 📄 [Case Study](#-case-study)
 - 🎯 [Demo](#-demo)
 - ⚡ [Quick Start](#-quick-start)
 - 🧠 [Project Objective](#-project-objective)
@@ -136,6 +137,14 @@ This project addresses that gap by formalizing decision-making as an optimizatio
 - [Decision Logic](docs/decision_logic.md)
 - [Optimization Layer](docs/optimization.md)
 - [Multi-Match Planning](docs/multi_match_planning.md)
+
+---
+
+## 📄 Case Study
+
+A realistic match congestion scenario showing how the system supports squad-level decision-making:
+
+👉 [Read full case study](docs/case_study.md)
 
 ---
 
@@ -425,7 +434,8 @@ docs/
 ├── architecture.md
 ├── decision_logic.md
 ├── optimization.md
-└── multi_match_planning.md
+├── multi_match_planning.md
+└── case_study.md
 
 notebooks/
 ├── README.md

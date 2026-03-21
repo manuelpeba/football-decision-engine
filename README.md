@@ -1,6 +1,10 @@
 # Football Decision Engine
 
-### Building end-to-end decision systems for football: from data to actionable insights under real-world constraints.
+### A decision intelligence system for managing player risk, performance and exposure under real-world football constraints.
+
+> Transforming predictive signals into **optimal squad decisions** through risk-aware optimization and multi-match planning.
+
+---
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue)
 ![Status](https://img.shields.io/badge/status-active-success)
@@ -46,17 +50,49 @@ They are allocated through a **global optimization process** that ensures consis
 
 ---
 
+## 📊 Key Results
+
+- End-to-end **decision system (not just models)**
+- Config-driven **MILP optimization layer**
+- Multi-match planning under congestion
+- Interpretable outputs (`decision`, `reason`, `priority_score`)
+- Modular architecture ready for extension (uncertainty, tactics)
+
+---
+
+## 🧠 Why This Matters (Elite Football Context)
+
+In professional football environments:
+
+- key players operate under injury risk
+- match congestion forces trade-offs across games
+- decisions must balance performance, availability and long-term exposure
+
+However, most analytics systems stop at:
+
+- estimating performance
+- quantifying risk
+
+They do not answer:
+
+> **What is the optimal decision at squad level?**
+
+This project addresses that gap by formalizing decision-making as an optimization problem.
+
+---
+
 ## ⭐ Key Features
 
 | Feature | Description |
 |--------|------------|
-| Decision Engine | Transforms data into actions |
+| Decision Engine | Converts predictive signals into optimized squad decisions |
 | Policy-driven | Fully configurable thresholds & rules |
 | MILP Optimization | Globally optimal decision allocation |
 | Risk-aware utility | Explicit trade-off between performance and availability |
 | Explainability | Human-readable reasoning for each decision |
 | Lineup Optimization | Formation-constrained starting XI |
 | Multi-Match Planning | Horizon-aware exposure allocation under congestion |
+| Config-driven MILP | Fully parameterized optimization layer (no hardcoded logic) |
 
 ---
 
@@ -85,7 +121,6 @@ They are allocated through a **global optimization process** that ensures consis
 - ⚙ [Decision Flow](#-decision-flow)
 - 🧩 [Component Responsibilities](#-component-responsibilities)
 - 📁 [Project Structure](#-project-structure)
-- ▶ [Running](#-running)
 - 📥 [Input Output](#-input-output)
 - ⚠ [Limitations](#-limitations)
 - 🚀 [Future Improvements](#-future-improvements)
@@ -106,7 +141,7 @@ They are allocated through a **global optimization process** that ensures consis
 
 ## 🎯 Demo
 
-The system moves from player evaluation to full multi-match planning under realistic constraints.
+The following examples illustrate how the system evolves from player-level evaluation to full squad planning under realistic constraints.
 
 ### 1. Player decision space (risk vs value)
 
@@ -187,10 +222,10 @@ Run in order:
 3. `03_lineup_optimization_elite.ipynb`
 4. `04_multi_match_planning_elite.ipynb`
 
-### 5. Run core engine (optional)
+### Minimal run (no notebooks)
 
 ```bash
-python run.py
+PYTHONPATH=src python run.py
 ```
 
 ### 🧪 What you will see
@@ -337,6 +372,13 @@ flowchart LR
     D --> E[Final Decisions]
     E --> F[Planning Layer]
 ```
+This architecture ensures a clear separation between:
+
+- **policy definition** (how players are evaluated)
+- **decision logic** (how actions are derived)
+- **optimization layer** (how decisions are allocated globally)
+
+This mirrors real-world football decision workflows across performance, medical and coaching staff.
 
 ---
 
@@ -393,19 +435,25 @@ notebooks/
 └── 04_multi_match_planning_elite.ipynb
 
 src/
-├── engine.py
-├── decision.py
-├── policies.py
-├── constraints.py
-└── optimizer_milp.py
-```
+└── football_decision_engine/
+    ├── __init__.py
+    ├── engine.py
+    ├── decision.py
+    ├── policies.py
+    ├── constraints.py
+    ├── optimizer.py
+    ├── optimizer_milp.py
+    ├── planning.py
+    ├── schemas.py
+    └── utils.py
 
----
+tests/
+├── test_decision.py
+├── test_engine.py
+├── test_optimizer_milp.py
+└── test_policy_validation.py
 
-## ▶ Running
-
-```bash
-python run.py
+run.py
 ```
 
 ---
@@ -453,10 +501,10 @@ Current limitations remain:
 
 | Version | Feature |
 | ------- | --------------------------------- |
-| v0.9 | Scenario-based planning under uncertainty |
-| v1.0 | Full decision intelligence system |
-| v1.1 | Opponent-aware tactical adaptation |
-| v1.2 | Robust optimization across availability scenarios |
+| v1.0 | Config-driven decision engine with MILP optimization |
+| v1.1 | Scenario-based planning under uncertainty |
+| v1.2 | Opponent-aware tactical adaptation |
+| v1.3 | Robust optimization across availability scenarios |
 
 ---
 
@@ -470,13 +518,31 @@ Most football analytics projects focus on:
 
 This project focuses on:
 
-> **decision-making under uncertainty**
+> **decision-making under constraints**
 
 It demonstrates the ability to:
 
 - design systems (not just models)
 - formalize trade-offs
 - apply optimization to real problems
+
+---
+
+## 🧠 Decision Intelligence Perspective
+
+This project demonstrates a shift in football analytics:
+
+From:
+- predictive models
+- player rankings
+- dashboards
+
+To:
+- decision systems
+- constrained optimization
+- actionable outputs
+
+This project reflects a shift towards how elite football organizations structure decision-making internally: combining data, constraints and optimization into coherent operational systems.
 
 ---
 

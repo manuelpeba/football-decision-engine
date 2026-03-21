@@ -22,3 +22,8 @@ outputs/figures/*
 
 # OS
 .DS_Store
+
+# backups / temp
+backup_*
+*copy*
+*tmp*

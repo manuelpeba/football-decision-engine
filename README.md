@@ -110,8 +110,9 @@ This project addresses that gap by formalizing decision-making as an optimizatio
 
 ## 📑 Table of Contents
 
+- 🧭 [System Design](docs/system_design.md)
 - 📚 [Documentation](#-documentation)
-- 📄 [Case Study](#-case-study)
+- 📄 [Case Study](docs/case_study.md)
 - 🎯 [Demo](#-demo)
 - ⚡ [Quick Start](#-quick-start)
 - 🧠 [Project Objective](#-project-objective)
@@ -133,6 +134,7 @@ This project addresses that gap by formalizing decision-making as an optimizatio
 
 ## 📚 Documentation
 
+- [System Design](docs/system_design.md) — high-level decision intelligence framework
 - [System Architecture](docs/architecture.md)
 - [Decision Logic](docs/decision_logic.md)
 - [Optimization Layer](docs/optimization.md)
@@ -431,6 +433,7 @@ assets/
     └── multi_match_planning.png
 
 docs/
+├── system_design.md
 ├── architecture.md
 ├── decision_logic.md
 ├── optimization.md
